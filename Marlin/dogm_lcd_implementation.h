@@ -465,13 +465,29 @@ static void lcd_implementation_mark_as_selected(uint8_t row, bool isSelected) {
   u8g.setPrintPos((START_ROW) * (DOG_CHAR_WIDTH), (row + 1) * (DOG_CHAR_HEIGHT));
 }
 
-static void lcd_implementation_drawmenu_generic(bool isSelected, uint8_t row, const char* pstr, char pre_char, char post_char) {
+static void lcd_implementation_drawmenu_statictext(uint8_t row, const char* pstr)
+{
+	char c;
+	uint8_t n = LCD_WIDTH - 2;
+
+	while (c = pgm_read_byte(pstr))
+	{
+		n -= lcd_print(c);
+		pstr++;
+	}
+	while (n--) lcd_print(' ');
+//	u8g.setPrintPos(LCD_PIXEL_WIDTH - (DOG_CHAR_WIDTH), (row + 1) * (DOG_CHAR_HEIGHT));
+}
+
+static void lcd_implementation_drawmenu_generic(bool isSelected, uint8_t row, const char* pstr, char pre_char, char post_char) 
+{
   char c;
   uint8_t n = LCD_WIDTH - 2;
 
   lcd_implementation_mark_as_selected(row, isSelected);
 
-  while (c = pgm_read_byte(pstr)) {
+  while (c = pgm_read_byte(pstr))
+  {
     n -= lcd_print(c);
     pstr++;
   }

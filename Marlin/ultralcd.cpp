@@ -143,34 +143,34 @@ static void lcd_status_screen();
   #if ENABLED(SDSUPPORT)
     static void lcd_sdcard_menu();
     static void menu_action_sdfile(const char* filename, char* longFilename);
-    static void menu_action_sddirectory(const char* filename, char* longFilename);
-  #endif
+	static void menu_action_sddirectory(const char* filename, char* longFilename);
+#endif
 
-  #define ENCODER_FEEDRATE_DEADZONE 10
+#define ENCODER_FEEDRATE_DEADZONE 10
 
-  #if DISABLED(LCD_I2C_VIKI)
-    #ifndef ENCODER_STEPS_PER_MENU_ITEM
-      #define ENCODER_STEPS_PER_MENU_ITEM 5
-    #endif
-    #ifndef ENCODER_PULSES_PER_STEP
-      #define ENCODER_PULSES_PER_STEP 1
-    #endif
-  #else
-    #ifndef ENCODER_STEPS_PER_MENU_ITEM
-      #define ENCODER_STEPS_PER_MENU_ITEM 2 // VIKI LCD rotary encoder uses a different number of steps per rotation
-    #endif
-    #ifndef ENCODER_PULSES_PER_STEP
-      #define ENCODER_PULSES_PER_STEP 1
-    #endif
-  #endif
+#if DISABLED(LCD_I2C_VIKI)
+#ifndef ENCODER_STEPS_PER_MENU_ITEM
+#define ENCODER_STEPS_PER_MENU_ITEM 5
+#endif
+#ifndef ENCODER_PULSES_PER_STEP
+#define ENCODER_PULSES_PER_STEP 1
+#endif
+#else
+#ifndef ENCODER_STEPS_PER_MENU_ITEM
+#define ENCODER_STEPS_PER_MENU_ITEM 2 // VIKI LCD rotary encoder uses a different number of steps per rotation
+#endif
+#ifndef ENCODER_PULSES_PER_STEP
+#define ENCODER_PULSES_PER_STEP 1
+#endif
+#endif
 
 
-  /* Helper macros for menus */
+	/* Helper macros for menus */
 
-  /**
-   * START_MENU generates the init code for a menu function
-   */
-  #define START_MENU() do { \
+	/**
+	 * START_MENU generates the init code for a menu function
+	 */
+#define START_MENU() do { \
     ENCODER_DIRECTION_MENUS(); \
     encoderRateMultiplierEnabled = false; \
     if (encoderPosition > 0x8000) encoderPosition = 0; \
@@ -178,50 +178,61 @@ static void lcd_status_screen();
     NOMORE(currentMenuViewOffset, encoderLine); \
     uint8_t _lineNr = currentMenuViewOffset, _menuItemNr; \
     bool wasClicked = LCD_CLICKED, itemSelected; \
+	uint8_t _staticText = 0;\
     for (uint8_t _drawLineNr = 0; _drawLineNr < LCD_HEIGHT; _drawLineNr++, _lineNr++) { \
       _menuItemNr = 0;
 
-  /**
-   * MENU_ITEM generates draw & handler code for a menu item, potentially calling:
-   *
-   *   lcd_implementation_drawmenu_[type](sel, row, label, arg3...)
-   *   menu_action_[type](arg3...)
-   *
-   * Examples:
-   *   MENU_ITEM(back, MSG_WATCH)
-   *     lcd_implementation_drawmenu_back(sel, row, PSTR(MSG_WATCH))
-   *     menu_action_back()
-   *
-   *   MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause)
-   *     lcd_implementation_drawmenu_function(sel, row, PSTR(MSG_PAUSE_PRINT), lcd_sdcard_pause)
-   *     menu_action_function(lcd_sdcard_pause)
-   *
-   *   MENU_ITEM_EDIT(int3, MSG_SPEED, &feedrate_multiplier, 10, 999)
-   *   MENU_ITEM(setting_edit_int3, MSG_SPEED, PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
-   *     lcd_implementation_drawmenu_setting_edit_int3(sel, row, PSTR(MSG_SPEED), PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
-   *     menu_action_setting_edit_int3(PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
-   *
-   */
-  #define _MENU_ITEM_PART_1(type, label, args...) \
+	 /**
+	  * MENU_ITEM generates draw & handler code for a menu item, potentially calling:
+	  *
+	  *   lcd_implementation_drawmenu_[type](sel, row, label, arg3...)
+	  *   menu_action_[type](arg3...)
+	  *
+	  * Examples:
+	  *   MENU_ITEM(back, MSG_WATCH)
+	  *     lcd_implementation_drawmenu_back(sel, row, PSTR(MSG_WATCH))
+	  *     menu_action_back()
+	  *
+	  *   MENU_ITEM(function, MSG_PAUSE_PRINT, lcd_sdcard_pause)
+	  *     lcd_implementation_drawmenu_function(sel, row, PSTR(MSG_PAUSE_PRINT), lcd_sdcard_pause)
+	  *     menu_action_function(lcd_sdcard_pause)
+	  *
+	  *   MENU_ITEM_EDIT(int3, MSG_SPEED, &feedrate_multiplier, 10, 999)
+	  *   MENU_ITEM(setting_edit_int3, MSG_SPEED, PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
+	  *     lcd_implementation_drawmenu_setting_edit_int3(sel, row, PSTR(MSG_SPEED), PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
+	  *     menu_action_setting_edit_int3(PSTR(MSG_SPEED), &feedrate_multiplier, 10, 999)
+	  *
+	  */
+#define _MENU_ITEM_PART_1(type, label, args...) \
     if (_menuItemNr == _lineNr) { \
-      itemSelected = encoderLine == _menuItemNr; \
+      itemSelected = ((encoderLine + _staticText) == _menuItemNr); \
       if (lcdDrawUpdate) \
         lcd_implementation_drawmenu_ ## type(itemSelected, _drawLineNr, PSTR(label), ## args); \
       if (wasClicked && itemSelected) { \
         lcd_quick_feedback()
 
-  #define _MENU_ITEM_PART_2(type, args...) \
+#define _MENU_ITEM_PART_2(type, args...) \
         menu_action_ ## type(args); \
         return; \
       } \
     } \
     _menuItemNr++
 
-  #define MENU_ITEM(type, label, args...) do { \
+#define MENU_ITEM(type, label, args...) do { \
       _MENU_ITEM_PART_1(type, label, ## args); \
       _MENU_ITEM_PART_2(type, ## args); \
     } while(0)
 
+	  //lcd_implementation_drawmenu_statictext(_drawLineNr - _staticText,PSTR(message));
+#define MENU_STATIC_TEXT(label){\
+	if (_menuItemNr == _lineNr) { \
+		if (lcdDrawUpdate) {\
+			lcd_implementation_drawmenu_generic(false, _drawLineNr, PSTR(label), '>', ' '); \
+		}\
+	   _staticText+= 1;\
+    }\
+    _menuItemNr++;\
+  }
   #if ENABLED(ENCODER_RATE_MULTIPLIER)
 
     //#define ENCODER_RATE_MULTIPLIER_DEBUG  // If defined, output the encoder steps per second value
@@ -249,7 +260,7 @@ static void lcd_status_screen();
     #define MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(type, label, args...) MENU_ITEM(setting_edit_callback_ ## type, label, PSTR(label), ## args)
   #endif //!ENCODER_RATE_MULTIPLIER
   #define END_MENU() \
-      if (encoderLine >= _menuItemNr) { encoderPosition = _menuItemNr * (ENCODER_STEPS_PER_MENU_ITEM) - 1; encoderLine = _menuItemNr - 1; }\
+      if (encoderLine >= (_menuItemNr - _staticText)) { encoderPosition = (_menuItemNr - _staticText) * (ENCODER_STEPS_PER_MENU_ITEM) - 1; encoderLine = (_menuItemNr - _staticText ) - 1; }\
       if (encoderLine >= currentMenuViewOffset + LCD_HEIGHT) { currentMenuViewOffset = encoderLine - (LCD_HEIGHT) + 1; lcdDrawUpdate = LCDVIEW_CALL_REDRAW_NEXT; _lineNr = currentMenuViewOffset - 1; _drawLineNr = -1; } \
       } } while(0)
 
@@ -1187,16 +1198,72 @@ void lcd_cooldown() {
   MENU_ITEM(submenu, MSG_CONTINUE, lcd_sequence_conclusion);
   END_MENU();
 }
+*/
+  //RCW
 
-//Step 1 - Summary Page. Click wheel to begin
+  static float currentZOffsetValue = 0;
+
+  static void _lcd_calibrate_z_edit_value()
+  {
+	  if (encoderPosition && movesplanned() <= 3) {
+		  refresh_cmd_timeout();
+		  current_position[Z_AXIS] += float((int32_t)encoderPosition) * 0.01;
+		  currentZOffsetValue += float((int32_t)encoderPosition) * 0.01;
+		  line_to_current(Z_AXIS);
+
+		  lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+	  }
+	  
+		  refresh_cmd_timeout();
+		  lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+	  
+	  encoderPosition = 0;
+	  if (lcdDrawUpdate) 
+	  {
+		  lcd_implementation_drawedit(PSTR(MSG_MOVE_Z), ftostr31(currentZOffsetValue));
+	  }
+	  if (LCD_CLICKED) 
+	  {
+		/*
+			M851 Z#; Sets the Z-offset ot #
+			M500; Saves values to firmware
+		*/
+		char saveSequence[50];
+		sprintf(saveSequence, "M851 Z%f\nM500\n", currentZOffsetValue -0.2 );
+		enqueue_and_echo_commands_P(saveSequence);
+		lcd_return_to_status();
+	  }
+  }
+
+  //Step 2 - Send g-code
+  static void _lcd_calibrate_z_send_gcode()
+  {
+	  /*
+	  M851 Z0; Sets Z offset to 0
+	  M500; Save values
+	  G91; Relative positioning
+	  G0 Z5; Move up 5mm
+	  G90; Absolute positioning
+	  G28; Home all axis
+	  G29; Probing sequence
+	  G1 X10.0 Y10.0 Z0; Move to a point.
+	  */
+	  enqueue_and_echo_commands_P(PSTR("M851 Z0\nM500\nG91;\nG0 Z5\nG90\nG28\nG29\nG1 X1.0 Y1.0 Z0\n"));
+	  currentZOffsetValue = 0;
+	  lcd_goto_menu(_lcd_calibrate_z_edit_value);
+  }
+
+  //Step 1 - Summary Page. Click wheel to begin
  static void lcd_set_z_offset_menu() {
   START_MENU();
-  MENU_ITEM(back, MSG_PREPARE);
-  MENU_ITEM(submenu, MSG_START_SEQUENCE, lcd_sequence_P1);
-//  MENU_ITEM(cancel, MSG_PREPARE);
+    MENU_STATIC_TEXT(MSG_INFO_Z_CALIBRATION_1);
+	MENU_STATIC_TEXT(MSG_INFO_Z_CALIBRATION_2);
+	MENU_STATIC_TEXT(MSG_INFO_Z_CALIBRATION_3);
+	MENU_ITEM(back, MSG_CANCEL_SEQUENCE);
+	MENU_ITEM(submenu, MSG_START_SEQUENCE, _lcd_calibrate_z_send_gcode);
   END_MENU();
 }
-*/
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -1223,14 +1290,14 @@ static void lcd_prepare_menu() {
 ///
   //NEW Section For Auto-Z Calibrate XMachines
   //
-  //MENU_ITEM(submenu , MSG_CALIBRATE_Z , lcd_set_z_offset_menu); //Click this to see summary page
+  MENU_ITEM(submenu , MSG_CALIBRATE_Z , lcd_set_z_offset_menu); //Click this to see summary page
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //
   // Set Home Offsets
   //
-  //MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets); //this one was commented
+  MENU_ITEM(function, MSG_SET_HOME_OFFSETS, lcd_set_home_offsets); //this one was commented
   //MENU_ITEM(gcode, MSG_SET_ORIGIN, PSTR("G92 X0 Y0 Z0"));
 
   //
@@ -2886,3 +2953,49 @@ char* ftostr52(const float& x) {
   return conv;
 }
 #endif // ULTRA_LCD
+
+
+
+
+
+/*
+void my_lcd_implementation_drawedit(int menu_position, const char* pstr, const char* value )
+{
+// LCD_WIDTH = 22
+// DOG_CHAR_WIDTH = 6
+// DOG_CHAR_HEIGHT_EDIT = 12
+
+uint8_t lcd_width = LCD_WIDTH, char_width = DOG_CHAR_WIDTH;
+uint8_t vallen = lcd_strlen(value);
+
+u8g.setPrintPos(0, menu_position + DOG_CHAR_HEIGHT_EDIT);
+lcd_printPGM(pstr);
+
+lcd_print(':');
+u8g.setPrintPos((lcd_width - 1 - vallen) * char_width, menu_position + DOG_CHAR_HEIGHT_EDIT);
+lcd_print(value);
+}
+
+int scroll_position = 0;
+
+static void _lcd_calibrate_z_summary()
+{
+ENCODER_DIRECTION_NORMAL();
+if (encoderPosition )
+{
+refresh_cmd_timeout();
+scroll_position += ( DOG_CHAR_HEIGHT_EDIT / 2 ) * encoderPosition;
+lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+if (scroll_position < 0)
+{
+scroll_position = 0;
+}
+}
+encoderPosition = 0;
+if (lcdDrawUpdate)
+{
+my_lcd_implementation_drawedit(scroll_position, PSTR("Z Offset"), itostr3(scroll_position));
+}
+if (LCD_CLICKED) lcd_goto_previous_menu(true);
+}
+*/
