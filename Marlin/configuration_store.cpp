@@ -35,8 +35,15 @@
  *       either sets a Sane Default, or results in No Change to the existing value.
  *
  */
+#include "Configuration.h"
 
-#define EEPROM_VERSION "V23"
+#define EEPROM_VERSION "V24"
+
+#if ENABLED(DUAL_X_CARRIAGE)
+	extern float extruder_offsetdefaults[3][EXTRUDERS];
+#else
+	extern float extruder_offset[2][EXTRUDERS];
+#endif
 
 /**
  * V23 EEPROM Layout:
@@ -322,6 +329,12 @@ void Config_StoreSettings()  {
     EEPROM_WRITE_VAR(i, dummy);
   }
 
+  // Save tool offsets.
+  EEPROM_WRITE_VAR(i, extruder_offset[X_AXIS][0]);
+  EEPROM_WRITE_VAR(i, extruder_offset[Y_AXIS][0]);
+  EEPROM_WRITE_VAR(i, extruder_offset[X_AXIS][1]);
+  EEPROM_WRITE_VAR(i, extruder_offset[Y_AXIS][1]);
+
   char ver2[4] = EEPROM_VERSION;
   int j = EEPROM_OFFSET;
   EEPROM_WRITE_VAR(j, ver2); // validate data
@@ -337,14 +350,18 @@ void Config_StoreSettings()  {
  */
 
 void Config_RetrieveSettings() {
-
+	int eepromVersion;
   int i = EEPROM_OFFSET;
   char stored_ver[4];
   char ver[4] = EEPROM_VERSION;
   EEPROM_READ_VAR(i, stored_ver); //read stored version
+  eepromVersion = (stored_ver[1] - '0') * 10;
+  eepromVersion += (stored_ver[2] - '0');
   //  SERIAL_ECHOLN("Version: [" << ver << "] Stored version: [" << stored_ver << "]");
 
-  if (strncmp(ver, stored_ver, 3) != 0) {
+  //if (strncmp(ver, stored_ver, 3) != 0) {
+  if ( eepromVersion < 23 )
+  {
     Config_ResetDefault();
   }
   else {
@@ -500,6 +517,15 @@ void Config_RetrieveSettings() {
       if (q < EXTRUDERS) filament_size[q] = dummy;
     }
 
+	// read tool offsets.
+	if (eepromVersion >= 24)
+	{
+		EEPROM_READ_VAR(i, extruder_offset[X_AXIS][0]);
+		EEPROM_READ_VAR(i, extruder_offset[Y_AXIS][0]);
+		EEPROM_READ_VAR(i, extruder_offset[X_AXIS][1]);
+		EEPROM_READ_VAR(i, extruder_offset[Y_AXIS][1]);
+	}
+
     calculate_volumetric_multipliers();
     // Call updatePID (similar to when we have processed M301)
     updatePID();
@@ -629,6 +655,20 @@ void Config_ResetDefault() {
   volumetric_enabled = false;
   for (uint8_t q = 0; q < COUNT(filament_size); q++)
     filament_size[q] = DEFAULT_NOMINAL_FILAMENT_DIA;
+
+  //Reset toolhead offsets.
+  float extruder_offsetdefaults[2][EXTRUDERS] = {
+	  EXTRUDER_OFFSET_X,
+	  EXTRUDER_OFFSET_Y
+#if ENABLED(DUAL_X_CARRIAGE)
+	  ,{ 0 } // Z offsets for each extruder
+#endif
+  };
+  extruder_offset[0][0] = extruder_offsetdefaults[0][0];
+  extruder_offset[1][0] = extruder_offsetdefaults[1][0];
+  extruder_offset[0][1] = extruder_offsetdefaults[0][1];
+  extruder_offset[1][1] = extruder_offsetdefaults[0][1];
+
   calculate_volumetric_multipliers();
 
   SERIAL_ECHO_START;
