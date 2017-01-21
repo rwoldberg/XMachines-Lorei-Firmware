@@ -43,7 +43,7 @@
 
 
 #ifndef WELCOME_MSG
-  #define WELCOME_MSG                         MACHINE_NAME " ready."
+  #define WELCOME_MSG                         "Hello Robert!" //MACHINE_NAME " ready."
 #endif
 #ifndef MSG_SD_INSERTED
   #define MSG_SD_INSERTED                     "Card inserted"
@@ -92,7 +92,19 @@
   #define MSG_SUMMARY                         "Turn Knob Till" "Nozzle Touches Bed"
 #endif
 #ifndef MSG_START_SEQUENCE
-  #define MSG_START_SEQUENCE                  "Click to Begin"
+  #define MSG_START_SEQUENCE                  "Begin"
+#endif
+#ifndef MSG_INFO_Z_CALIBRATION_1
+#define MSG_INFO_Z_CALIBRATION_1 "This is to help you"
+#endif
+#ifndef MSG_INFO_Z_CALIBRATION_2
+#define MSG_INFO_Z_CALIBRATION_2 "setup the extruder"
+#endif
+#ifndef MSG_INFO_Z_CALIBRATION_3
+#define MSG_INFO_Z_CALIBRATION_3 "z-offset"
+#endif
+#ifndef MSG_CANCEL_SEQUENCE
+#define MSG_CANCEL_SEQUENCE                  "Cancel"
 #endif
 #ifndef MSG_CONTINUE
   #define MSG_CONTINUE                        "Click to continue"
