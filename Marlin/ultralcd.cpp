@@ -1279,7 +1279,7 @@ void lcd_cooldown() {
 		  lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
 	  }
 	  encoderPosition = 0;
-	  if (lcdDrawUpdate) lcd_implementation_drawedit(name, ftostr31(extruder_offset[axis][1]));
+	  if (lcdDrawUpdate) lcd_implementation_drawedit(name, ftostr32(extruder_offset[axis][1]));
 	  if (LCD_CLICKED) lcd_goto_previous_menu(true);
   }
 
