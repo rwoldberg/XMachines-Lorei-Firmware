@@ -1264,6 +1264,38 @@ void lcd_cooldown() {
   END_MENU();
 }
 
+#if EXTRUDERS > 1 
+  extern float extruder_offset[2][EXTRUDERS];
+
+  static void _lcd_move_hotend(const char* name, AxisEnum axis, float min, float max) 
+  {
+	  ENCODER_DIRECTION_NORMAL();
+	  if (encoderPosition)
+	  {
+		  refresh_cmd_timeout();
+		  extruder_offset[axis][1] += float((int32_t)encoderPosition) * 0.01;
+		  if (min_software_endstops) NOLESS(extruder_offset[axis][1], min);
+		  if (max_software_endstops) NOMORE(extruder_offset[axis][1], max);
+		  lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+	  }
+	  encoderPosition = 0;
+	  if (lcdDrawUpdate) lcd_implementation_drawedit(name, ftostr31(extruder_offset[axis][1]));
+	  if (LCD_CLICKED) lcd_goto_previous_menu(true);
+  }
+
+  static void lcd_move_hotend_x() { _lcd_move_hotend(PSTR(MSG_MOVE_X), X_AXIS, EXTRUDER_2_OFFSET_X_DEFAULT - 2.0, EXTRUDER_2_OFFSET_X_DEFAULT + 2.0); }
+  static void lcd_move_hotend_y() { _lcd_move_hotend(PSTR(MSG_MOVE_Y), Y_AXIS, -2.0, 2.0); }
+
+  static void lcd_set_hotend_offset_menu()
+  {
+	  START_MENU();
+	  MENU_ITEM(back, MSG_PREPARE);
+	  MENU_ITEM(submenu, MSG_HOTEND_OFFSET_X, lcd_move_hotend_x);
+	  MENU_ITEM(submenu, MSG_HOTEND_OFFSET_Y, lcd_move_hotend_y);
+	  END_MENU();
+  }
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -1291,6 +1323,12 @@ static void lcd_prepare_menu() {
   //NEW Section For Auto-Z Calibrate XMachines
   //
   MENU_ITEM(submenu , MSG_CALIBRATE_Z , lcd_set_z_offset_menu); //Click this to see summary page
+
+#if EXTRUDERS > 1 
+  //NEW Section For HotEnd Calibrate XMachines
+  //
+  MENU_ITEM(submenu, MSG_HOTEND_OFFSET, lcd_set_hotend_offset_menu); //Click this to see summary page
+#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
