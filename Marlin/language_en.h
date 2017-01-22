@@ -69,6 +69,15 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Library XMachines Have Added
+#ifndef MSG_HOTEND_OFFSET
+	#define MSG_HOTEND_OFFSET					"Set Hotend Offset"
+#endif
+#ifndef MSG_HOTEND_OFFSET_X
+	#define MSG_HOTEND_OFFSET_X					"Set X Offset"
+#endif
+#ifndef MSG_HOTEND_OFFSET_Y
+	#define MSG_HOTEND_OFFSET_Y					"Set Y Offset"
+#endif
 #ifndef MSG_PRINTING
   #define MSG_PRINTING                         "Printing"
 #endif
